@@ -1,11 +1,11 @@
 <class>
   <keyword> class </keyword>
-  <identifier> Main </identifier>
+  <identifier category="className" kind="none" defined> Main </identifier>
   <symbol> { </symbol>
   <subroutineDec>
     <keyword> function </keyword>
     <keyword> void </keyword>
-    <identifier> main </identifier>
+    <identifier category="subroutineName" kind="none" defined> main </identifier>
     <symbol> ( </symbol>
     <parameterList>
     </parameterList>
@@ -14,34 +14,34 @@
       <symbol> { </symbol>
       <varDec>
         <keyword> var </keyword>
-        <identifier> Array </identifier>
-        <identifier> a </identifier>
+        <identifier category="className" kind="none" used> Array </identifier>
+        <identifier category="varName" kind="var" index="0" defined> a </identifier>
         <symbol> ; </symbol>
       </varDec>
       <varDec>
         <keyword> var </keyword>
         <keyword> int </keyword>
-        <identifier> length </identifier>
+        <identifier category="varName" kind="var" index="1" defined> length </identifier>
         <symbol> ; </symbol>
       </varDec>
       <varDec>
         <keyword> var </keyword>
         <keyword> int </keyword>
-        <identifier> i </identifier>
+        <identifier category="varName" kind="var" index="2" defined> i </identifier>
         <symbol> , </symbol>
-        <identifier> sum </identifier>
+        <identifier category="varName" kind="var" index="3" defined> sum </identifier>
         <symbol> ; </symbol>
       </varDec>
       <statements>
         <letStatement>
           <keyword> let </keyword>
-          <identifier> length </identifier>
+          <identifier category="varName" kind="var" index="1" used> length </identifier>
           <symbol> = </symbol>
           <expression>
             <term>
-              <identifier> Keyboard </identifier>
+              <identifier category="className" kind="none" used> Keyboard </identifier>
               <symbol> . </symbol>
-              <identifier> readInt </identifier>
+              <identifier category="subroutineName" kind="none" used> readInt </identifier>
               <symbol> ( </symbol>
               <expressionList>
                 <expression>
@@ -57,18 +57,18 @@
         </letStatement>
         <letStatement>
           <keyword> let </keyword>
-          <identifier> a </identifier>
+          <identifier category="varName" kind="var" index="0" used> a </identifier>
           <symbol> = </symbol>
           <expression>
             <term>
-              <identifier> Array </identifier>
+              <identifier category="className" kind="none" used> Array </identifier>
               <symbol> . </symbol>
-              <identifier> new </identifier>
+              <identifier category="subroutineName" kind="none" used> new </identifier>
               <symbol> ( </symbol>
               <expressionList>
                 <expression>
                   <term>
-                    <identifier> length </identifier>
+                    <identifier category="varName" kind="var" index="1" used> length </identifier>
                   </term>
                 </expression>
               </expressionList>
@@ -79,7 +79,7 @@
         </letStatement>
         <letStatement>
           <keyword> let </keyword>
-          <identifier> i </identifier>
+          <identifier category="varName" kind="var" index="2" used> i </identifier>
           <symbol> = </symbol>
           <expression>
             <term>
@@ -93,11 +93,11 @@
           <symbol> ( </symbol>
           <expression>
             <term>
-              <identifier> i </identifier>
+              <identifier category="varName" kind="var" index="2" used> i </identifier>
             </term>
             <symbol> &lt; </symbol>
             <term>
-              <identifier> length </identifier>
+              <identifier category="varName" kind="var" index="1" used> length </identifier>
             </term>
           </expression>
           <symbol> ) </symbol>
@@ -105,20 +105,20 @@
           <statements>
             <letStatement>
               <keyword> let </keyword>
-              <identifier> a </identifier>
+              <identifier category="varName" kind="var" index="0" used> a </identifier>
               <symbol> [ </symbol>
               <expression>
                 <term>
-                  <identifier> i </identifier>
+                  <identifier category="varName" kind="var" index="2" used> i </identifier>
                 </term>
               </expression>
               <symbol> ] </symbol>
               <symbol> = </symbol>
               <expression>
                 <term>
-                  <identifier> Keyboard </identifier>
+                  <identifier category="className" kind="none" used> Keyboard </identifier>
                   <symbol> . </symbol>
-                  <identifier> readInt </identifier>
+                  <identifier category="subroutineName" kind="none" used> readInt </identifier>
                   <symbol> ( </symbol>
                   <expressionList>
                     <expression>
@@ -134,11 +134,11 @@
             </letStatement>
             <letStatement>
               <keyword> let </keyword>
-              <identifier> i </identifier>
+              <identifier category="varName" kind="var" index="2" used> i </identifier>
               <symbol> = </symbol>
               <expression>
                 <term>
-                  <identifier> i </identifier>
+                  <identifier category="varName" kind="var" index="2" used> i </identifier>
                 </term>
                 <symbol> + </symbol>
                 <term>
@@ -152,7 +152,7 @@
         </whileStatement>
         <letStatement>
           <keyword> let </keyword>
-          <identifier> i </identifier>
+          <identifier category="varName" kind="var" index="2" used> i </identifier>
           <symbol> = </symbol>
           <expression>
             <term>
@@ -163,7 +163,7 @@
         </letStatement>
         <letStatement>
           <keyword> let </keyword>
-          <identifier> sum </identifier>
+          <identifier category="varName" kind="var" index="3" used> sum </identifier>
           <symbol> = </symbol>
           <expression>
             <term>
@@ -177,11 +177,11 @@
           <symbol> ( </symbol>
           <expression>
             <term>
-              <identifier> i </identifier>
+              <identifier category="varName" kind="var" index="2" used> i </identifier>
             </term>
             <symbol> &lt; </symbol>
             <term>
-              <identifier> length </identifier>
+              <identifier category="varName" kind="var" index="1" used> length </identifier>
             </term>
           </expression>
           <symbol> ) </symbol>
@@ -189,19 +189,19 @@
           <statements>
             <letStatement>
               <keyword> let </keyword>
-              <identifier> sum </identifier>
+              <identifier category="varName" kind="var" index="3" used> sum </identifier>
               <symbol> = </symbol>
               <expression>
                 <term>
-                  <identifier> sum </identifier>
+                  <identifier category="varName" kind="var" index="3" used> sum </identifier>
                 </term>
                 <symbol> + </symbol>
                 <term>
-                  <identifier> a </identifier>
+                  <identifier category="varName" kind="var" index="0" used> a </identifier>
                   <symbol> [ </symbol>
                   <expression>
                     <term>
-                      <identifier> i </identifier>
+                      <identifier category="varName" kind="var" index="2" used> i </identifier>
                     </term>
                   </expression>
                   <symbol> ] </symbol>
@@ -211,11 +211,11 @@
             </letStatement>
             <letStatement>
               <keyword> let </keyword>
-              <identifier> i </identifier>
+              <identifier category="varName" kind="var" index="2" used> i </identifier>
               <symbol> = </symbol>
               <expression>
                 <term>
-                  <identifier> i </identifier>
+                  <identifier category="varName" kind="var" index="2" used> i </identifier>
                 </term>
                 <symbol> + </symbol>
                 <term>
@@ -229,9 +229,9 @@
         </whileStatement>
         <doStatement>
           <keyword> do </keyword>
-          <identifier> Output </identifier>
+          <identifier category="className" kind="none" used> Output </identifier>
           <symbol> . </symbol>
-          <identifier> printString </identifier>
+          <identifier category="subroutineName" kind="none" used> printString </identifier>
           <symbol> ( </symbol>
           <expressionList>
             <expression>
@@ -245,18 +245,18 @@
         </doStatement>
         <doStatement>
           <keyword> do </keyword>
-          <identifier> Output </identifier>
+          <identifier category="className" kind="none" used> Output </identifier>
           <symbol> . </symbol>
-          <identifier> printInt </identifier>
+          <identifier category="subroutineName" kind="none" used> printInt </identifier>
           <symbol> ( </symbol>
           <expressionList>
             <expression>
               <term>
-                <identifier> sum </identifier>
+                <identifier category="varName" kind="var" index="3" used> sum </identifier>
               </term>
               <symbol> / </symbol>
               <term>
-                <identifier> length </identifier>
+                <identifier category="varName" kind="var" index="1" used> length </identifier>
               </term>
             </expression>
           </expressionList>
@@ -265,9 +265,9 @@
         </doStatement>
         <doStatement>
           <keyword> do </keyword>
-          <identifier> Output </identifier>
+          <identifier category="className" kind="none" used> Output </identifier>
           <symbol> . </symbol>
-          <identifier> println </identifier>
+          <identifier category="subroutineName" kind="none" used> println </identifier>
           <symbol> ( </symbol>
           <expressionList>
           </expressionList>

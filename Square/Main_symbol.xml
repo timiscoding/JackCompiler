@@ -1,0 +1,70 @@
+<class>
+  <keyword> class </keyword>
+  <identifier category="className" kind="none" defined> Main </identifier>
+  <symbol> { </symbol>
+  <subroutineDec>
+    <keyword> function </keyword>
+    <keyword> void </keyword>
+    <identifier category="subroutineName" kind="none" defined> main </identifier>
+    <symbol> ( </symbol>
+    <parameterList>
+    </parameterList>
+    <symbol> ) </symbol>
+    <subroutineBody>
+      <symbol> { </symbol>
+      <varDec>
+        <keyword> var </keyword>
+        <identifier category="className" kind="none" used> SquareGame </identifier>
+        <identifier category="varName" kind="var" index="0" defined> game </identifier>
+        <symbol> ; </symbol>
+      </varDec>
+      <statements>
+        <letStatement>
+          <keyword> let </keyword>
+          <identifier category="varName" kind="var" index="0" used> game </identifier>
+          <symbol> = </symbol>
+          <expression>
+            <term>
+              <identifier category="className" kind="none" used> SquareGame </identifier>
+              <symbol> . </symbol>
+              <identifier category="subroutineName" kind="none" used> new </identifier>
+              <symbol> ( </symbol>
+              <expressionList>
+              </expressionList>
+              <symbol> ) </symbol>
+            </term>
+          </expression>
+          <symbol> ; </symbol>
+        </letStatement>
+        <doStatement>
+          <keyword> do </keyword>
+          <identifier category="varName" kind="var" index="0" used> game </identifier>
+          <symbol> . </symbol>
+          <identifier category="subroutineName" kind="none" used> run </identifier>
+          <symbol> ( </symbol>
+          <expressionList>
+          </expressionList>
+          <symbol> ) </symbol>
+          <symbol> ; </symbol>
+        </doStatement>
+        <doStatement>
+          <keyword> do </keyword>
+          <identifier category="varName" kind="var" index="0" used> game </identifier>
+          <symbol> . </symbol>
+          <identifier category="subroutineName" kind="none" used> dispose </identifier>
+          <symbol> ( </symbol>
+          <expressionList>
+          </expressionList>
+          <symbol> ) </symbol>
+          <symbol> ; </symbol>
+        </doStatement>
+        <returnStatement>
+          <keyword> return </keyword>
+          <symbol> ; </symbol>
+        </returnStatement>
+      </statements>
+      <symbol> } </symbol>
+    </subroutineBody>
+  </subroutineDec>
+  <symbol> } </symbol>
+</class>

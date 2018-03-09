@@ -25,7 +25,7 @@ files.forEach(f => {
   });
   const output = path.format({
     dir,
-    name: inputParsed.name + '_tim',
+    name: inputParsed.name + '_symbol',
     ext: '.xml'});
   console.log(`Parsing ${path.relative(process.cwd(), f)} -> ${path.relative(process.cwd(), output)}`);
   const ce = new CompilationEngine(input, output);
