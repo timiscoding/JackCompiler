@@ -137,7 +137,11 @@ export default class CompilationEngine {
   compileClass() {
     this.eat(CLASS);
     const {token: identifier} = this.eat(IDENTIFIER);
-    this.log({type: 'identifierToken', data: {category: 'className', defined: true, kind: SymbolTableKinds.NONE, identifier}});
+    this.log({type: 'identifierToken', data: {
+      category: 'className',
+      defined: true,
+      kind: SymbolTableKinds.NONE,
+      identifier}});
 
     this.eat('{');
 
@@ -157,18 +161,32 @@ export default class CompilationEngine {
     const kind = symbolKind(type);
 
     const {token: typeIdentifier, tokenType} = this.eat(TYPE_RULE);
-    tokenType === IDENTIFIER && this.log({type: 'identifierToken', data: {category: 'className', defined: false, kind: SymbolTableKinds.NONE, identifier: typeIdentifier}})
+    tokenType === IDENTIFIER && this.log({type: 'identifierToken', data: {
+      category: 'className',
+      defined: false,
+      kind: SymbolTableKinds.NONE,
+      identifier: typeIdentifier}})
 
     const {token: identifier} = this.eat(IDENTIFIER);
     this.st.define(identifier, typeIdentifier.display || typeIdentifier, kind);
-    this.log({type: 'identifierToken', data: {category: "varName", kind, defined: true, index: this.st.indexOf(identifier), identifier}});
+    this.log({type: 'identifierToken', data: {
+      category: "varName",
+      kind,
+      defined: true,
+      index: this.st.indexOf(identifier),
+      identifier}});
 
     while (this.tokenOneOf(',')) {
       this.eat(',');
 
       const {token: identifier} = this.eat(IDENTIFIER);
       this.st.define(identifier, typeIdentifier.display || typeIdentifier, kind);
-      this.log({type: 'identifierToken', data: {category: "varName", kind, defined: true, index: this.st.indexOf(identifier), identifier}});
+      this.log({type: 'identifierToken', data: {
+        category: "varName",
+        kind,
+        defined: true,
+        index: this.st.indexOf(identifier),
+        identifier}});
     }
 
     this.eat(';');
@@ -178,10 +196,18 @@ export default class CompilationEngine {
     this.eat([CONSTRUCTOR, FUNCTION, METHOD]);
 
     const {token: typeIdentifier, tokenType} = this.eat([VOID, ...TYPE_RULE]);
-    tokenType === IDENTIFIER && this.log({type: 'identifierToken', data: {category: 'className', defined: false, kind: SymbolTableKinds.NONE, identifier: typeIdentifier}});
+    tokenType === IDENTIFIER && this.log({type: 'identifierToken', data: {
+      category: 'className',
+      defined: false,
+      kind: SymbolTableKinds.NONE,
+      identifier: typeIdentifier}});
 
     const {token: identifier} = this.eat(IDENTIFIER);
-    this.log({type: 'identifierToken', data: {category: 'subroutineName', defined: true, kind: SymbolTableKinds.NONE, identifier}})
+    this.log({type: 'identifierToken', data: {
+      category: 'subroutineName',
+      defined: true,
+      kind: SymbolTableKinds.NONE,
+      identifier}});
     this.eat('(');
     this.logWrapper(this.compileParameterList, 'parameterList');
     this.eat(')');
@@ -191,21 +217,39 @@ export default class CompilationEngine {
   compileParameterList() {
     if (this.tokenOneOf(TYPE_RULE)) {
       const {token: typeIdentifier, tokenType} = this.eat(TYPE_RULE);
-      tokenType === IDENTIFIER && this.log({type: 'identifierToken', data: {category: 'className', defined: false, kind: SymbolTableKinds.NONE, identifier: typeIdentifier}});
+      tokenType === IDENTIFIER && this.log({type: 'identifierToken', data: {
+        category: 'className',
+        defined: false,
+        kind: SymbolTableKinds.NONE,
+        identifier: typeIdentifier}});
 
       const {token: identifier} = this.eat(IDENTIFIER);
       this.st.define(identifier, typeIdentifier.display || typeIdentifier, SymbolTableKinds.ARG);
-      this.log({type: 'identifierToken', data: {category: 'varName', defined: true, kind: SymbolTableKinds.ARG, index: this.st.indexOf(identifier), identifier}});
+      this.log({type: 'identifierToken', data: {
+        category: 'varName',
+        defined: true,
+        kind: SymbolTableKinds.ARG,
+        index: this.st.indexOf(identifier),
+        identifier}});
 
       while (this.tokenOneOf(',')) {
         this.eat(',');
 
         const {token: typeIdentifier, tokenType} = this.eat(TYPE_RULE);
-        tokenType === IDENTIFIER && this.log({ type: 'identifierToken', data: { category: 'className', defined: false, kind: SymbolTableKinds.NONE, identifier: typeIdentifier}})
+        tokenType === IDENTIFIER && this.log({ type: 'identifierToken', data: {
+          category: 'className',
+          defined: false,
+          kind: SymbolTableKinds.NONE,
+          identifier: typeIdentifier}});
 
         const {token: identifier} = this.eat(IDENTIFIER);
         this.st.define(identifier, typeIdentifier.display || typeIdentifier, SymbolTableKinds.ARG);
-        this.log({type: 'identifierToken', data: {category: 'varName', defined: true, kind: SymbolTableKinds.ARG, index: this.st.indexOf(identifier), identifier}});
+        this.log({type: 'identifierToken', data: {
+          category: 'varName',
+          defined: true,
+          kind: SymbolTableKinds.ARG,
+          index: this.st.indexOf(identifier),
+          identifier}});
       }
     }
   }
@@ -225,18 +269,32 @@ export default class CompilationEngine {
     this.eat(VAR);
 
     var {token: typeIdentifier, tokenType} = this.eat(TYPE_RULE);
-    tokenType === IDENTIFIER && this.log({ type: 'identifierToken', data: { category: 'className', defined: false, kind: SymbolTableKinds.NONE, identifier: typeIdentifier}});
+    tokenType === IDENTIFIER && this.log({ type: 'identifierToken', data: {
+      category: 'className',
+      defined: false,
+      kind: SymbolTableKinds.NONE,
+      identifier: typeIdentifier}});
 
     var {token: identifier} = this.eat(IDENTIFIER);
     this.st.define(identifier, typeIdentifier.display || typeIdentifier, SymbolTableKinds.VAR);
-    this.log({type: 'identifierToken', data: {category: 'varName', defined: true, kind: SymbolTableKinds.VAR, index: this.st.indexOf(identifier), identifier}})
+    this.log({type: 'identifierToken', data: {
+      category: 'varName',
+      defined: true,
+      kind: SymbolTableKinds.VAR,
+      index: this.st.indexOf(identifier),
+      identifier}});
 
     while (this.tokenOneOf(',')) {
       this.eat(',');
 
       const {token: identifier} = this.eat(IDENTIFIER);
       this.st.define(identifier, typeIdentifier.display || typeIdentifier, SymbolTableKinds.VAR);
-      this.log({type: 'identifierToken', data: {category: 'varName', defined: true, kind: SymbolTableKinds.VAR, index: this.st.indexOf(identifier), identifier}})
+      this.log({type: 'identifierToken', data: {
+        category: 'varName',
+        defined: true,
+        kind: SymbolTableKinds.VAR,
+        index: this.st.indexOf(identifier),
+        identifier}});
     }
 
     this.eat(';');
@@ -252,7 +310,12 @@ export default class CompilationEngine {
   compileLetStatement() {
     this.eat(LET);
     const {token: identifier} = this.eat(IDENTIFIER);
-    this.log({type: 'identifierToken', data: {category: 'varName', kind: this.st.kindOf(identifier), index: this.st.indexOf(identifier), defined: false, identifier}});
+    this.log({type: 'identifierToken', data: {
+      category: 'varName',
+      kind: this.st.kindOf(identifier),
+      index: this.st.indexOf(identifier),
+      defined: false,
+      identifier}});
 
     if (this.tokenOneOf('[')) {
       this.eat('[');
@@ -300,10 +363,16 @@ export default class CompilationEngine {
 
     switch (this.tk.symbol()) {
       case '.':
-        this.log({type: 'identifierToken', data: {...logData, category: this.st.exists(logData.identifier) ? 'varName' : 'className'}});
+        this.log({type: 'identifierToken', data: {
+          ...logData,
+          category: this.st.exists(logData.identifier) ? 'varName' : 'className'}});
         this.eat('.');
         const {token: identifier} = this.eat(IDENTIFIER);
-        this.log({type: 'identifierToken', data: {category: 'subroutineName', kind: SymbolTableKinds.NONE, defined: false, identifier}});
+        this.log({type: 'identifierToken', data: {
+          category: 'subroutineName',
+          kind: SymbolTableKinds.NONE,
+          defined: false,
+          identifier}});
         this.eat('(');
         this.logWrapper(this.compileExpressionList, 'expressionList');
         this.eat(')');
@@ -343,13 +412,20 @@ export default class CompilationEngine {
       const {token: identifier} = this.eat(IDENTIFIER);
       const logData = {kind: this.st.kindOf(identifier), defined: false, index: this.st.indexOf(identifier), identifier};
 
-      // cases '.' and '(' comprise the subroutineCall rule. The '[' case is array access. The default case is plain varName
+      /* cases '.' and '(' comprise the subroutineCall rule.
+        The '[' case is array access. The default case is plain varName */
       switch (this.tk.symbol()) {
         case '.':
-          this.log({type: 'identifierToken', data: {...logData, category: this.st.exists(logData.identifier) ? 'varName' : 'className'}});
+          this.log({type: 'identifierToken', data: {
+            ...logData,
+            category: this.st.exists(logData.identifier) ? 'varName' : 'className'}});
           this.eat('.');
           const {token: identifier} = this.eat(IDENTIFIER);
-          this.log({type: 'identifierToken', data: {category: 'subroutineName', defined: false, kind: SymbolTableKinds.NONE, identifier}});
+          this.log({type: 'identifierToken', data: {
+            category: 'subroutineName',
+            defined: false,
+            kind: SymbolTableKinds.NONE,
+            identifier}});
           this.eat('(');
           this.logWrapper(this.compileExpressionList, 'expressionList');
           this.eat(')');
