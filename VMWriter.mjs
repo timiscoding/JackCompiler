@@ -2,7 +2,7 @@ import fs from 'fs';
 import assert from 'assert';
 import Enum from './Enum';
 
-const Segments = new Enum({
+export const Segments = new Enum({
   CONST: {value: 0, description: 'constant'},
   ARG: {value: 1, description: 'arg'},
   LOCAL: {value: 2, description: 'local'},
@@ -13,7 +13,7 @@ const Segments = new Enum({
   TEMP: {value: 7, description: 'temp'},
 });
 
-const Commands = new Enum({
+export const Commands = new Enum({
   ADD: {value:0, description: 'add'},
   SUB: {value:1, description: 'sub'},
   NEG: {value:2, description: 'neg'},
@@ -25,9 +25,9 @@ const Commands = new Enum({
   NOT: {value:8, description: 'not'},
 });
 
-class VMWriter {
+export default class VMWriter {
   constructor(outputFilename) {
-    this.outputFile = fs.openSync(outputFilename, 'w+');
+    this.outputFile = fs.openSync(outputFilename + '.vm', 'w+');
   }
 
   write(str) {

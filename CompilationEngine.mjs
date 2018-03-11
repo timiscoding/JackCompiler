@@ -1,6 +1,7 @@
 import fs from 'fs';
 import {default as JackTokenizer, TokenTypes, TokenKeywords} from './JackTokenizer';
 import {default as SymbolTable, SymbolTableKinds} from './SymbolTable';
+import {default as VMWriter, Segments, Commands} from './VMWriter';
 
 const { KEYWORD, SYMBOL, IDENTIFIER, INT_CONST, STRING_CONST } = TokenTypes;
 const {
@@ -37,12 +38,17 @@ const symbolKind = (tokenKeyword) => {
 };
 
 export default class CompilationEngine {
-  constructor(inputFile, outputFile) {
+  constructor(inputFile, outputFile, enableLog=false) {
     this.inputFile = inputFile;
-    this.outputFile = fs.openSync(outputFile, 'w+');
     this.tk = new JackTokenizer(inputFile);
     this.st = new SymbolTable();
+    this.vw = new VMWriter(outputFile);
     this.indentLevel = 0;
+    this.enableLog = enableLog;
+
+    if (enableLog) {
+      this.outputFile = fs.openSync(outputFile + '_symbol.xml', 'w+');
+    }
 
     if (this.tk.hasMoreTokens()) {
       this.tk.advance(); // set the first token
@@ -56,6 +62,7 @@ export default class CompilationEngine {
   }
 
   log({type, data}={}) {
+    if (!this.enableLog) return;
     let str;
 
     if (type === 'identifierToken') {
@@ -99,9 +106,10 @@ export default class CompilationEngine {
   logWrapper(compileCb, tag) {
     this.log({type: 'raw', data: `<${tag}>`});
     this.indentLevel++;
-    compileCb.call(this);
+    const retVal = compileCb.call(this);
     this.indentLevel--;
     this.log({type: 'raw', data: `</${tag}>`});
+    return retVal;
   }
 
   tokenOneOf(accepted) {
@@ -142,6 +150,7 @@ export default class CompilationEngine {
       defined: true,
       kind: SymbolTableKinds.NONE,
       identifier}});
+    this.className = identifier;
 
     this.eat('{');
 
@@ -208,6 +217,8 @@ export default class CompilationEngine {
       defined: true,
       kind: SymbolTableKinds.NONE,
       identifier}});
+    this.subroutineName = identifier;
+
     this.eat('(');
     this.logWrapper(this.compileParameterList, 'parameterList');
     this.eat(')');
@@ -260,6 +271,10 @@ export default class CompilationEngine {
     while (this.tokenOneOf(VAR)) {
       this.logWrapper(this.compileVarDec, 'varDec');
     }
+
+    this.vw.writeFunction(
+      `${this.className}.${this.subroutineName}`,
+      this.st.varCount(SymbolTableKinds.VAR));
 
     this.logWrapper(this.compileStatements, 'statements');
     this.eat('}');
@@ -367,14 +382,20 @@ export default class CompilationEngine {
           ...logData,
           category: this.st.exists(logData.identifier) ? 'varName' : 'className'}});
         this.eat('.');
-        const {token: identifier} = this.eat(IDENTIFIER);
+
+        const {token: subroutineName} = this.eat(IDENTIFIER);
         this.log({type: 'identifierToken', data: {
           category: 'subroutineName',
           kind: SymbolTableKinds.NONE,
           defined: false,
-          identifier}});
+          identifier: subroutineName}});
+
         this.eat('(');
-        this.logWrapper(this.compileExpressionList, 'expressionList');
+
+        const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList');
+        this.vw.writeCall(`${identifier}.${subroutineName}`, nArgs);
+        this.vw.writePop(Segments.TEMP, 0);
+
         this.eat(')');
         break;
       case '(':
@@ -394,7 +415,11 @@ export default class CompilationEngine {
     this.eat(RETURN);
     if (this.tokenOneOf([INT_CONST, STRING_CONST, ...KEYWORD_CONSTANT, IDENTIFIER, '(', '-', '~'])) {
       this.logWrapper(this.compileExpression, 'expression');
+    } else {
+      this.vw.writePush(Segments.CONST, 0);
     }
+
+    this.vw.writeReturn();
     this.eat(';');
   }
 
@@ -402,8 +427,28 @@ export default class CompilationEngine {
     this.logWrapper(this.compileTerm, 'term');
 
     while (this.tokenOneOf(['+', '-', '*', '/', '&', '|', '<', '>', '='])) {
-      this.eat(this.tk.symbol());
+      const {token, tokenType} = this.eat(this.tk.symbol());
       this.logWrapper(this.compileTerm, 'term');
+
+      if (token === '+') {
+        this.vw.writeArithmetic(Commands.ADD);
+      } else if (token === '-') {
+        this.vw.writeArithmetic(Commands.SUB);
+      } else if (token === '*') {
+        this.vw.writeCall('Math.multiply', 2);
+      } else if (token === '/') {
+        this.vw.writeCall('Math.divide', 2);
+      } else if (token === '&') {
+        this.vw.writeArithmetic(Commands.AND);
+      } else if (token === '|') {
+        this.vw.writeArithmetic(Commands.OR);
+      } else if (token === '<') {
+        this.vw.writeArithmetic(Commands.LT);
+      } else if (token === '>') {
+        this.vw.writeArithmetic(Commands.GT);
+      } else if (token === '=') {
+        this.vw.writeArithmetic(Commands.EQ);
+      }
     }
   }
 
@@ -453,22 +498,32 @@ export default class CompilationEngine {
       this.eat(this.tk.symbol());
       this.logWrapper(this.compileTerm, 'term');
     } else {
-      this.eat([INT_CONST, STRING_CONST, ...KEYWORD_CONSTANT]);
-    }
-  }
+      const {token, tokenType} = this.eat([INT_CONST, STRING_CONST, ...KEYWORD_CONSTANT]);
 
-  compileExpressionList() {
-    if (this.tokenOneOf([INT_CONST, STRING_CONST, ...KEYWORD_CONSTANT, IDENTIFIER, '(', '-', '~'])) {
-      this.logWrapper(this.compileExpression, 'expression');
-
-      while (this.tokenOneOf(',')) {
-        this.eat(',');
-        this.logWrapper(this.compileExpression, 'expression');
+      if (tokenType === INT_CONST) {
+        this.vw.writePush(Segments.CONST, token);
       }
     }
   }
 
+  compileExpressionList() {
+    let count = 0;
+    if (this.tokenOneOf([INT_CONST, STRING_CONST, ...KEYWORD_CONSTANT, IDENTIFIER, '(', '-', '~'])) {
+      this.logWrapper(this.compileExpression, 'expression');
+      count++;
+
+      while (this.tokenOneOf(',')) {
+        this.eat(',');
+        this.logWrapper(this.compileExpression, 'expression');
+        count++;
+      }
+    }
+
+    return count;
+  }
+
   dispose() {
+    if (!this.enableLog) return;
     fs.closeSync(this.outputFile);
     this.outputFile = null;
   }
