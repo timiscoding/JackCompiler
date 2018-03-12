@@ -3,6 +3,7 @@ import path from 'path';
 import CompilationEngine from './CompilationEngine';
 
 const inputArg = process.argv[2];
+const outputFilenamePostfix = process.argv[3];
 
 if (!fs.existsSync(inputArg)) {
   throw Error('No such file/dir', inputArg);
@@ -25,9 +26,9 @@ files.forEach(f => {
   });
   const output = path.format({
     dir,
-    name: inputParsed.name,
+    name: inputParsed.name + outputFilenamePostfix,
   });
-  console.log(`Parsing ${path.relative(process.cwd(), f)} -> ${path.relative(process.cwd(), output)}`);
-  const ce = new CompilationEngine(input, output, true);
+  console.log(`Compiling ${path.relative(process.cwd(), f)} -> ${path.relative(process.cwd(), output)}.vm`);
+  const ce = new CompilationEngine(input, output);
   ce.dispose();
 })

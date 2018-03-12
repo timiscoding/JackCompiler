@@ -4,7 +4,7 @@ import Enum from './Enum';
 
 export const Segments = new Enum({
   CONST: {value: 0, description: 'constant'},
-  ARG: {value: 1, description: 'arg'},
+  ARG: {value: 1, description: 'argument'},
   LOCAL: {value: 2, description: 'local'},
   STATIC: {value: 3, description: 'static'},
   THIS: {value: 4, description: 'this'},

@@ -202,6 +202,7 @@ export default class CompilationEngine {
   }
 
   compileSubroutineDec() {
+    this.st.startSubroutine();
     this.eat([CONSTRUCTOR, FUNCTION, METHOD]);
 
     const {token: typeIdentifier, tokenType} = this.eat([VOID, ...TYPE_RULE]);
@@ -376,36 +377,33 @@ export default class CompilationEngine {
     const {token: identifier} = this.eat(IDENTIFIER);
     const logData = {kind: this.st.kindOf(identifier), index: this.st.indexOf(identifier), defined: false, identifier};
 
-    switch (this.tk.symbol()) {
-      case '.':
-        this.log({type: 'identifierToken', data: {
-          ...logData,
-          category: this.st.exists(logData.identifier) ? 'varName' : 'className'}});
-        this.eat('.');
+    if (this.tk.symbol() === '.') {
+      this.log({type: 'identifierToken', data: {
+        ...logData,
+        category: this.st.exists(logData.identifier) ? 'varName' : 'className'}});
+      this.eat('.');
 
-        const {token: subroutineName} = this.eat(IDENTIFIER);
-        this.log({type: 'identifierToken', data: {
-          category: 'subroutineName',
-          kind: SymbolTableKinds.NONE,
-          defined: false,
-          identifier: subroutineName}});
+      const {token: subroutineName} = this.eat(IDENTIFIER);
+      this.log({type: 'identifierToken', data: {
+        category: 'subroutineName',
+        kind: SymbolTableKinds.NONE,
+        defined: false,
+        identifier: subroutineName}});
 
-        this.eat('(');
+      this.eat('(');
 
-        const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList');
-        this.vw.writeCall(`${identifier}.${subroutineName}`, nArgs);
-        this.vw.writePop(Segments.TEMP, 0);
+      const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList');
+      this.vw.writeCall(`${identifier}.${subroutineName}`, nArgs);
+      this.vw.writePop(Segments.TEMP, 0);
 
-        this.eat(')');
-        break;
-      case '(':
-        this.log({type: 'identifierToken', data: {...logData, category: 'subroutineName'}});
-        this.eat('(');
-        this.logWrapper(this.compileExpressionList, 'expressionList');
-        this.eat(')');
-        break;
-      default:
-        throw new Error('Failed to see "(" or "." token');
+      this.eat(')');
+    } else if (this.tk.symbol() === '(') {
+      this.log({type: 'identifierToken', data: {...logData, category: 'subroutineName'}});
+      this.eat('(');
+      this.logWrapper(this.compileExpressionList, 'expressionList');
+      this.eat(')');
+    } else {
+      throw new Error('Failed to see "(" or "." token');
     }
 
     this.eat(';');
@@ -430,25 +428,15 @@ export default class CompilationEngine {
       const {token, tokenType} = this.eat(this.tk.symbol());
       this.logWrapper(this.compileTerm, 'term');
 
-      if (token === '+') {
-        this.vw.writeArithmetic(Commands.ADD);
-      } else if (token === '-') {
-        this.vw.writeArithmetic(Commands.SUB);
-      } else if (token === '*') {
-        this.vw.writeCall('Math.multiply', 2);
-      } else if (token === '/') {
-        this.vw.writeCall('Math.divide', 2);
-      } else if (token === '&') {
-        this.vw.writeArithmetic(Commands.AND);
-      } else if (token === '|') {
-        this.vw.writeArithmetic(Commands.OR);
-      } else if (token === '<') {
-        this.vw.writeArithmetic(Commands.LT);
-      } else if (token === '>') {
-        this.vw.writeArithmetic(Commands.GT);
-      } else if (token === '=') {
-        this.vw.writeArithmetic(Commands.EQ);
-      }
+      if (token === '+') { this.vw.writeArithmetic(Commands.ADD); }
+      else if (token === '-') { this.vw.writeArithmetic(Commands.SUB); }
+      else if (token === '*') { this.vw.writeCall('Math.multiply', 2); }
+      else if (token === '/') { this.vw.writeCall('Math.divide', 2); }
+      else if (token === '&') { this.vw.writeArithmetic(Commands.AND); }
+      else if (token === '|') { this.vw.writeArithmetic(Commands.OR); }
+      else if (token === '<') { this.vw.writeArithmetic(Commands.LT); }
+      else if (token === '>') { this.vw.writeArithmetic(Commands.GT); }
+      else if (token === '=') { this.vw.writeArithmetic(Commands.EQ); }
     }
   }
 
@@ -459,44 +447,58 @@ export default class CompilationEngine {
 
       /* cases '.' and '(' comprise the subroutineCall rule.
         The '[' case is array access. The default case is plain varName */
-      switch (this.tk.symbol()) {
-        case '.':
-          this.log({type: 'identifierToken', data: {
-            ...logData,
-            category: this.st.exists(logData.identifier) ? 'varName' : 'className'}});
-          this.eat('.');
-          const {token: identifier} = this.eat(IDENTIFIER);
-          this.log({type: 'identifierToken', data: {
-            category: 'subroutineName',
-            defined: false,
-            kind: SymbolTableKinds.NONE,
-            identifier}});
-          this.eat('(');
-          this.logWrapper(this.compileExpressionList, 'expressionList');
-          this.eat(')');
-          break;
-        case '(':
-          this.log({type: 'identifierToken', data: {...logData, category: 'subroutineName'}});
-          this.eat('(');
-          this.logWrapper(this.compileExpressionList, 'expressionList');
-          this.eat(')');
-          break;
-        case '[':
-          this.log({type: 'identifierToken', data: {...logData, category: 'varName'}});
-          this.eat('[');
-          this.logWrapper(this.compileExpression, 'expression');
-          this.eat(']');
-          break;
-        default:
-          this.log({type: 'identifierToken', data: {...logData, category: 'varName'}});
+      if (this.tk.symbol() === '.') {
+        this.log({type: 'identifierToken', data: {
+          ...logData,
+          category: this.st.exists(logData.identifier) ? 'varName' : 'className'}});
+        this.eat('.');
+
+        const {token: subroutineName} = this.eat(IDENTIFIER);
+        this.log({type: 'identifierToken', data: {
+          category: 'subroutineName',
+          defined: false,
+          kind: SymbolTableKinds.NONE,
+          identifier: subroutineName}});
+
+        this.eat('(');
+        const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList');
+        this.eat(')');
+
+        this.vw.writeCall(`${identifier}.${subroutineName}`, nArgs);
+      } else if (this.tk.symbol() === '(') {
+        this.log({type: 'identifierToken', data: {...logData, category: 'subroutineName'}});
+        this.eat('(');
+        const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList');
+        this.eat(')');
+      } else if (this.tk.symbol() === '[') {
+        this.log({type: 'identifierToken', data: {...logData, category: 'varName'}});
+        this.eat('[');
+        this.logWrapper(this.compileExpression, 'expression');
+        this.eat(']');
+      } else {
+        this.log({type: 'identifierToken', data: {...logData, category: 'varName'}});
+
+        let segment;
+        const symKind = this.st.kindOf(identifier);
+        // TODO field
+        if (symKind === SymbolTableKinds.STATIC) { segment = Segments.STATIC; }
+        else if (symKind === SymbolTableKinds.VAR) { segment = Segments.LOCAL; }
+        else if (symKind === SymbolTableKinds.ARG) { segment = Segments.ARG; }
+        this.vw.writePush(segment, this.st.indexOf(identifier));
       }
     } else if (this.tokenOneOf('(')) {
       this.eat('(');
       this.logWrapper(this.compileExpression, 'expression');
       this.eat(')');
     } else if (this.tokenOneOf(['-', '~'])) { // unaryOp term
-      this.eat(this.tk.symbol());
+      const {token} = this.eat(this.tk.symbol());
       this.logWrapper(this.compileTerm, 'term');
+
+      if (token === '-') {
+        this.vw.writeArithmetic(Commands.NEG);
+      } else if (token === '~') {
+        this.vw.writeArithmetic(Commands.NOT);
+      }
     } else {
       const {token, tokenType} = this.eat([INT_CONST, STRING_CONST, ...KEYWORD_CONSTANT]);
 
