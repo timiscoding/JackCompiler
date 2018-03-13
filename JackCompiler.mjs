@@ -3,7 +3,7 @@ import path from 'path';
 import CompilationEngine from './CompilationEngine';
 
 const inputArg = process.argv[2];
-const outputFilenamePostfix = process.argv[3];
+const outputFilenamePostfix = process.argv[3] || '';
 
 if (!fs.existsSync(inputArg)) {
   throw Error('No such file/dir', inputArg);

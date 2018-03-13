@@ -36,6 +36,12 @@ const symbolKind = (tokenKeyword) => {
     case VAR: return SymbolTableKinds.VAR;
   }
 };
+const symbolKindToSegment = kind => {
+  // TODO field
+  if (kind === SymbolTableKinds.STATIC) { return Segments.STATIC; }
+  else if (kind === SymbolTableKinds.VAR) { return Segments.LOCAL; }
+  else if (kind === SymbolTableKinds.ARG) { return Segments.ARG; }
+}
 
 export default class CompilationEngine {
   constructor(inputFile, outputFile, enableLog=false) {
@@ -45,6 +51,11 @@ export default class CompilationEngine {
     this.vw = new VMWriter(outputFile);
     this.indentLevel = 0;
     this.enableLog = enableLog;
+    this.labelGen = this.labelGenerator();
+    this.genLabel = controlFlow => {
+      this.labelGen.next();;
+      return this.labelGen.next(controlFlow).value;
+    }
 
     if (enableLog) {
       this.outputFile = fs.openSync(outputFile + '_symbol.xml', 'w+');
@@ -59,6 +70,34 @@ export default class CompilationEngine {
 
   getToken(tokenType) {
     return tokenMethod.get(tokenType).call(this.tk);
+  }
+
+  *labelGenerator() {
+    const id = {};
+    while (true) {
+      const controlFlow = yield;
+
+      if (!this.className || !this.subroutineName) {
+        throw Error('Cannot generate label from emtpy class/function name');
+      }
+
+      if (!['while', 'if'].includes(controlFlow)) {
+        throw Error("Arg must be one of 'if', 'while', 'else'");
+      }
+
+      const key = this.className + this.subroutineName + controlFlow;
+      if (typeof id[key] === 'undefined') {
+        id[key] = 0;
+      } else {
+        id[key]++;
+      }
+
+      if (controlFlow === 'while') {
+        yield [`WHILE_EXP${id[key]}`, `WHILE_END${id[key]}`];
+      } else if (controlFlow === 'if') {
+        yield [`IF_FALSE${id[key]}`, `IF_END${id[key]}`];
+      }
+    }
   }
 
   log({type, data}={}) {
@@ -341,6 +380,8 @@ export default class CompilationEngine {
 
     this.eat('=');
     this.logWrapper(this.compileExpression, 'expression');
+    this.vw.writePop(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
+
     this.eat(';');
   }
 
@@ -348,6 +389,11 @@ export default class CompilationEngine {
     this.eat(IF);
     this.eat('(');
     this.logWrapper(this.compileExpression, 'expression');
+
+    this.vw.writeArithmetic(Commands.NOT);
+    const [IF_FALSE, IF_END] = this.genLabel('if');
+    this.vw.writeIf(IF_FALSE);
+
     this.eat(')');
     this.eat('{');
     this.logWrapper(this.compileStatements, 'statements');
@@ -356,19 +402,36 @@ export default class CompilationEngine {
     if (this.tokenOneOf(ELSE)) {
       this.eat(ELSE);
       this.eat('{');
+
+      this.vw.writeGoto(IF_END);
+      this.vw.writeLabel(IF_FALSE);
       this.logWrapper(this.compileStatements, 'statements');
+      this.vw.writeLabel(IF_END);
+
       this.eat('}');
+    } else {
+      this.vw.writeLabel(IF_FALSE);
     }
   }
 
   compileWhileStatement() {
     this.eat(WHILE);
     this.eat('(');
+
+    const [WHILE_EXP, WHILE_END] = this.genLabel('while');
+    this.vw.writeLabel(WHILE_EXP);
     this.logWrapper(this.compileExpression, 'expression');
+    this.vw.writeArithmetic(Commands.NOT);
+    this.vw.writeIf(WHILE_END);
+
     this.eat(')');
     this.eat('{');
+
     this.logWrapper(this.compileStatements, 'statements');
+
+    this.vw.writeGoto(WHILE_EXP);
     this.eat('}');
+    this.vw.writeLabel(WHILE_END);
   }
 
   compileDoStatement() {
@@ -478,13 +541,7 @@ export default class CompilationEngine {
       } else {
         this.log({type: 'identifierToken', data: {...logData, category: 'varName'}});
 
-        let segment;
-        const symKind = this.st.kindOf(identifier);
-        // TODO field
-        if (symKind === SymbolTableKinds.STATIC) { segment = Segments.STATIC; }
-        else if (symKind === SymbolTableKinds.VAR) { segment = Segments.LOCAL; }
-        else if (symKind === SymbolTableKinds.ARG) { segment = Segments.ARG; }
-        this.vw.writePush(segment, this.st.indexOf(identifier));
+        this.vw.writePush(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
       }
     } else if (this.tokenOneOf('(')) {
       this.eat('(');
@@ -504,6 +561,11 @@ export default class CompilationEngine {
 
       if (tokenType === INT_CONST) {
         this.vw.writePush(Segments.CONST, token);
+      } else if (token === NULL || token === FALSE) {
+        this.vw.writePush(Segments.CONST, 0);
+      } else if (token === TRUE) {
+        this.vw.writePush(Segments.CONST, 1);
+        this.vw.writeArithmetic(Commands.NEG);
       }
     }
   }
