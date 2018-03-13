@@ -37,8 +37,8 @@ const symbolKind = (tokenKeyword) => {
   }
 };
 const symbolKindToSegment = kind => {
-  // TODO field
   if (kind === SymbolTableKinds.STATIC) { return Segments.STATIC; }
+  else if (kind === SymbolTableKinds.FIELD) { return Segments.THIS; }
   else if (kind === SymbolTableKinds.VAR) { return Segments.LOCAL; }
   else if (kind === SymbolTableKinds.ARG) { return Segments.ARG; }
 }
@@ -142,10 +142,10 @@ export default class CompilationEngine {
     fs.appendFileSync(this.outputFile, '  '.repeat(this.indentLevel) + str + '\n');
   }
 
-  logWrapper(compileCb, tag) {
+  logWrapper(compileCb, tag, ...cbArgs) {
     this.log({type: 'raw', data: `<${tag}>`});
     this.indentLevel++;
-    const retVal = compileCb.call(this);
+    const retVal = compileCb.apply(this, cbArgs);
     this.indentLevel--;
     this.log({type: 'raw', data: `</${tag}>`});
     return retVal;
@@ -242,7 +242,11 @@ export default class CompilationEngine {
 
   compileSubroutineDec() {
     this.st.startSubroutine();
-    this.eat([CONSTRUCTOR, FUNCTION, METHOD]);
+    const {token: subroutineType} = this.eat([CONSTRUCTOR, FUNCTION, METHOD]);
+
+    if (subroutineType === METHOD) {
+      this.st.define('this', this.className, SymbolTableKinds.ARG);
+    }
 
     const {token: typeIdentifier, tokenType} = this.eat([VOID, ...TYPE_RULE]);
     tokenType === IDENTIFIER && this.log({type: 'identifierToken', data: {
@@ -262,7 +266,7 @@ export default class CompilationEngine {
     this.eat('(');
     this.logWrapper(this.compileParameterList, 'parameterList');
     this.eat(')');
-    this.logWrapper(this.compileSubroutineBody, 'subroutineBody');
+    this.logWrapper(this.compileSubroutineBody, 'subroutineBody', subroutineType);
   }
 
   compileParameterList() {
@@ -305,7 +309,7 @@ export default class CompilationEngine {
     }
   }
 
-  compileSubroutineBody() {
+  compileSubroutineBody(subroutineType) {
     this.eat('{');
 
     while (this.tokenOneOf(VAR)) {
@@ -315,6 +319,15 @@ export default class CompilationEngine {
     this.vw.writeFunction(
       `${this.className}.${this.subroutineName}`,
       this.st.varCount(SymbolTableKinds.VAR));
+
+    if (subroutineType === CONSTRUCTOR) {
+      this.vw.writePush(Segments.CONST, this.st.varCount(SymbolTableKinds.FIELD));
+      this.vw.writeCall('Memory.alloc', 1);
+      this.vw.writePop(Segments.POINTER, 0);
+    } else if (subroutineType === METHOD) { // link the object (argument 0) with THIS segment
+      this.vw.writePush(Segments.ARG, 0);
+      this.vw.writePop(Segments.POINTER, 0);
+    }
 
     this.logWrapper(this.compileStatements, 'statements');
     this.eat('}');
@@ -455,15 +468,32 @@ export default class CompilationEngine {
 
       this.eat('(');
 
-      const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList');
-      this.vw.writeCall(`${identifier}.${subroutineName}`, nArgs);
+      if (this.st.exists(identifier)) { // calling a method on an object identifier
+        // pop the object base address
+        this.vw.writePush(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
+        const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList') + 1;
+        const className = this.st.typeOf(identifier);
+        this.vw.writeCall(`${className}.${subroutineName}`, nArgs);
+      } else { // calling a function
+        const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList');
+        this.vw.writeCall(`${identifier}.${subroutineName}`, nArgs);
+      }
       this.vw.writePop(Segments.TEMP, 0);
 
       this.eat(')');
-    } else if (this.tk.symbol() === '(') {
+    } else if (this.tk.symbol() === '(') { // calling method from the class that declares it
       this.log({type: 'identifierToken', data: {...logData, category: 'subroutineName'}});
       this.eat('(');
-      this.logWrapper(this.compileExpressionList, 'expressionList');
+
+      if (this.st.exists('this')) { // inside another method
+        this.vw.writePush(Segments.ARG, 0);
+      } else { // inside constructor
+        this.vw.writePush(Segments.POINTER, 0);
+      }
+      const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList') + 1;
+      this.vw.writeCall(`${this.className}.${identifier}`, nArgs);
+      this.vw.writePop(Segments.TEMP, 0);
+
       this.eat(')');
     } else {
       throw new Error('Failed to see "(" or "." token');
@@ -566,6 +596,12 @@ export default class CompilationEngine {
       } else if (token === TRUE) {
         this.vw.writePush(Segments.CONST, 1);
         this.vw.writeArithmetic(Commands.NEG);
+      } else if (token === THIS) {
+        if (this.st.exists('this')) { // we are in method
+          this.vw.writePush(Segments.ARG, 0);
+        } else { // we are in constructor
+          this.vw.writePush(Segments.POINTER, 0);
+        }
       }
     }
   }

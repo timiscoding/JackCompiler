@@ -50,4 +50,6 @@ node --experimental-modules JackCompiler.mjs <file/dir>
 ```
 
 ## Testing
-Each of the folders contains Jack programs used to test the compiler. All except `ExpressionTest` were provided by the nand2tetris course creators. A bash script `regressTest.sh` compiles the Jack programs from the test dirs using this compiler as well as the course supplied [JackCompiler](http://nand2tetris.org/software.php) and tests that they match.
+Each of the folders contains Jack programs used to test the compiler. All except `ExpressionTest` were provided by the nand2tetris course creators.
+
+A bash script `regressTest.sh` compiles the Jack programs from custom test dirs I've written using this compiler as well as the course supplied [JackCompiler](http://nand2tetris.org/software.php) and tests that they match. N.B. As development of the compiler continues, I've found the VM code my compiler generates deviates from the course provided one so its use is quite limited.
