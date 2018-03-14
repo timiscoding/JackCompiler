@@ -8,7 +8,6 @@ const {
   CLASS, METHOD, FUNCTION, CONSTRUCTOR, INT, BOOLEAN, CHAR, VOID, VAR, STATIC, FIELD, LET,
   DO, IF, ELSE, WHILE, RETURN, TRUE, FALSE, NULL, THIS,
 } = TokenKeywords;
-
 const tokenMethod = new Map([
   [KEYWORD, JackTokenizer.prototype.keyword],
   [SYMBOL, JackTokenizer.prototype.symbol],
@@ -18,25 +17,7 @@ const tokenMethod = new Map([
 ]);
 const TYPE_RULE = [INT, CHAR, BOOLEAN, IDENTIFIER];
 const KEYWORD_CONSTANT = [TRUE, FALSE, NULL, THIS];
-const toEntity = (str) => str.replace(/(")|(<)|(>)|(&)/g, (m, quote, lt, gt, amp) => {
-  if (quote) {
-    return '&quot;';
-  } else if (lt) {
-    return '&lt;';
-  } else if (gt) {
-    return '&gt;';
-  } else if (amp) {
-    return '&amp;';
-  }
-});
-const symbolKind = (tokenKeyword) => {
-  switch(tokenKeyword) {
-    case STATIC: return SymbolTableKinds.STATIC;
-    case FIELD: return SymbolTableKinds.FIELD;
-    case VAR: return SymbolTableKinds.VAR;
-  }
-};
-const symbolKindToSegment = kind => {
+const segment = kind => {
   if (kind === SymbolTableKinds.STATIC) { return Segments.STATIC; }
   else if (kind === SymbolTableKinds.FIELD) { return Segments.THIS; }
   else if (kind === SymbolTableKinds.VAR) { return Segments.LOCAL; }
@@ -131,7 +112,13 @@ export default class CompilationEngine {
       let thisToken = this.getToken(thisTokenType);
 
       if (this.tokenOneOf([STRING_CONST, SYMBOL])) {
-        thisToken = toEntity(thisToken);
+        // escape special characters in XML
+        thisToken = thisToken.replace(/(")|(<)|(>)|(&)/g, (m, quote, lt, gt, amp) => {
+          if (quote) { return '&quot;'; }
+          else if (lt) { return '&lt;'; }
+          else if (gt) { return '&gt;'; }
+          else if (amp) { return '&amp;'; }
+        });
       }
 
       str = `<${thisTokenType.display}> ${thisToken.display || thisToken} </${thisTokenType.display}>`
@@ -155,15 +142,10 @@ export default class CompilationEngine {
     const thisTokenType = this.tk.tokenType();
     const thisToken = this.getToken(thisTokenType);
 
-    if (Array.isArray(accepted) && accepted.includes(thisToken)) {
-      return thisToken;
-    } else if (Array.isArray(accepted) && accepted.includes(thisTokenType)) {
-      return thisTokenType;
-    } else if (accepted === thisToken) {
-      return thisToken;
-    } else if (accepted === thisTokenType) {
-      return thisTokenType;
-    }
+    return (Array.isArray(accepted) && accepted.includes(thisToken)) ||
+           (Array.isArray(accepted) && accepted.includes(thisTokenType)) ||
+           (accepted === thisToken) ||
+           (accepted === thisTokenType);
   }
 
   eat(accepted) {
@@ -206,7 +188,10 @@ export default class CompilationEngine {
 
   compileClassVarDec() {
     const {token: type} = this.eat([STATIC, FIELD]);
-    const kind = symbolKind(type);
+
+    let kind;
+    if (type === STATIC) { kind = SymbolTableKinds.STATIC; }
+    else if (type === FIELD) { kind = SymbolTableKinds.FIELD; }
 
     const {token: typeIdentifier, tokenType} = this.eat(TYPE_RULE);
     tokenType === IDENTIFIER && this.log({type: 'identifierToken', data: {
@@ -389,7 +374,7 @@ export default class CompilationEngine {
       this.eat('[');
 
       // push base address + index on stack
-      this.vw.writePush(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
+      this.vw.writePush(segment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
       this.logWrapper(this.compileExpression, 'expression');
       this.vw.writeArithmetic(Commands.ADD);
 
@@ -405,7 +390,7 @@ export default class CompilationEngine {
       this.eat('=');
 
       this.logWrapper(this.compileExpression, 'expression');
-      this.vw.writePop(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
+      this.vw.writePop(segment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
     }
 
     this.eat(';');
@@ -486,7 +471,7 @@ export default class CompilationEngine {
 
       if (this.st.exists(identifier)) { // calling a method on an object identifier
         // push the object base address
-        this.vw.writePush(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
+        this.vw.writePush(segment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
         const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList') + 1;
         const className = this.st.typeOf(identifier);
         this.vw.writeCall(`${className}.${subroutineName}`, nArgs);
@@ -566,7 +551,7 @@ export default class CompilationEngine {
         this.log({type: 'identifierToken', data: {...logData, category: 'varName'}});
         this.eat('[');
 
-        this.vw.writePush(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
+        this.vw.writePush(segment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
         this.logWrapper(this.compileExpression, 'expression');
         this.vw.writeArithmetic(Commands.ADD);
         this.vw.writePop(Segments.POINTER, 1);
@@ -576,7 +561,7 @@ export default class CompilationEngine {
       } else { // plain variable
         this.log({type: 'identifierToken', data: {...logData, category: 'varName'}});
 
-        this.vw.writePush(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
+        this.vw.writePush(segment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
       }
     } else if (this.tokenOneOf('(')) {
       this.eat('(');
