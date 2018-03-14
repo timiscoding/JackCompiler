@@ -460,29 +460,32 @@ export default class CompilationEngine {
     this.vw.writeLabel(WHILE_END);
   }
 
-  compileDoStatement() {
-    this.eat(DO);
-    // subroutineCall rule
-    const {token: identifier} = this.eat(IDENTIFIER);
+  compileSubroutineCall(identifier) {
     const logData = {kind: this.st.kindOf(identifier), index: this.st.indexOf(identifier), defined: false, identifier};
 
     if (this.tk.symbol() === '.') {
-      this.log({type: 'identifierToken', data: {
-        ...logData,
-        category: this.st.exists(logData.identifier) ? 'varName' : 'className'}});
+      this.log({
+        type: 'identifierToken', data: {
+          ...logData,
+          category: this.st.exists(logData.identifier) ? 'varName' : 'className'
+        }
+      });
       this.eat('.');
 
       const {token: subroutineName} = this.eat(IDENTIFIER);
-      this.log({type: 'identifierToken', data: {
-        category: 'subroutineName',
-        kind: SymbolTableKinds.NONE,
-        defined: false,
-        identifier: subroutineName}});
+      this.log({
+        type: 'identifierToken', data: {
+          category: 'subroutineName',
+          kind: SymbolTableKinds.NONE,
+          defined: false,
+          identifier: subroutineName
+        }
+      });
 
       this.eat('(');
 
       if (this.st.exists(identifier)) { // calling a method on an object identifier
-        // pop the object base address
+        // push the object base address
         this.vw.writePush(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
         const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList') + 1;
         const className = this.st.typeOf(identifier);
@@ -491,7 +494,6 @@ export default class CompilationEngine {
         const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList');
         this.vw.writeCall(`${identifier}.${subroutineName}`, nArgs);
       }
-      this.vw.writePop(Segments.TEMP, 0);
 
       this.eat(')');
     } else if (this.tk.symbol() === '(') { // calling method from the class that declares it
@@ -505,13 +507,20 @@ export default class CompilationEngine {
       }
       const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList') + 1;
       this.vw.writeCall(`${this.className}.${identifier}`, nArgs);
-      this.vw.writePop(Segments.TEMP, 0);
 
       this.eat(')');
     } else {
       throw new Error('Failed to see "(" or "." token');
     }
+  }
 
+  compileDoStatement() {
+    this.eat(DO);
+    const {token: identifier} = this.eat(IDENTIFIER);
+
+    this.compileSubroutineCall(identifier);
+
+    this.vw.writePop(Segments.TEMP, 0);
     this.eat(';');
   }
 
@@ -551,31 +560,8 @@ export default class CompilationEngine {
       const {token: identifier} = this.eat(IDENTIFIER);
       const logData = {kind: this.st.kindOf(identifier), defined: false, index: this.st.indexOf(identifier), identifier};
 
-      /* cases '.' and '(' comprise the subroutineCall rule.
-        The '[' case is array access. The default case is plain varName */
-      if (this.tk.symbol() === '.') {
-        this.log({type: 'identifierToken', data: {
-          ...logData,
-          category: this.st.exists(logData.identifier) ? 'varName' : 'className'}});
-        this.eat('.');
-
-        const {token: subroutineName} = this.eat(IDENTIFIER);
-        this.log({type: 'identifierToken', data: {
-          category: 'subroutineName',
-          defined: false,
-          kind: SymbolTableKinds.NONE,
-          identifier: subroutineName}});
-
-        this.eat('(');
-        const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList');
-        this.eat(')');
-
-        this.vw.writeCall(`${identifier}.${subroutineName}`, nArgs);
-      } else if (this.tk.symbol() === '(') {
-        this.log({type: 'identifierToken', data: {...logData, category: 'subroutineName'}});
-        this.eat('(');
-        const nArgs = this.logWrapper(this.compileExpressionList, 'expressionList');
-        this.eat(')');
+      if (this.tokenOneOf(['.', '('])) {
+        this.compileSubroutineCall(identifier);
       } else if (this.tk.symbol() === '[') {
         this.log({type: 'identifierToken', data: {...logData, category: 'varName'}});
         this.eat('[');
@@ -587,7 +573,7 @@ export default class CompilationEngine {
         this.vw.writePush(Segments.THAT, 0);
 
         this.eat(']');
-      } else {
+      } else { // plain variable
         this.log({type: 'identifierToken', data: {...logData, category: 'varName'}});
 
         this.vw.writePush(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
