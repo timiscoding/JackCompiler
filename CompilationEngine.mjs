@@ -387,13 +387,26 @@ export default class CompilationEngine {
 
     if (this.tokenOneOf('[')) {
       this.eat('[');
-      this.logWrapper(this.compileExpression, 'expression');
-      this.eat(']');
-    }
 
-    this.eat('=');
-    this.logWrapper(this.compileExpression, 'expression');
-    this.vw.writePop(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
+      // push base address + index on stack
+      this.vw.writePush(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
+      this.logWrapper(this.compileExpression, 'expression');
+      this.vw.writeArithmetic(Commands.ADD);
+
+      this.eat(']');
+      this.eat('=');
+
+      this.logWrapper(this.compileExpression, 'expression');
+      this.vw.writePop(Segments.TEMP, 0);
+      this.vw.writePop(Segments.POINTER, 1);
+      this.vw.writePush(Segments.TEMP, 0);
+      this.vw.writePop(Segments.THAT, 0);
+    } else {
+      this.eat('=');
+
+      this.logWrapper(this.compileExpression, 'expression');
+      this.vw.writePop(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
+    }
 
     this.eat(';');
   }
@@ -566,7 +579,13 @@ export default class CompilationEngine {
       } else if (this.tk.symbol() === '[') {
         this.log({type: 'identifierToken', data: {...logData, category: 'varName'}});
         this.eat('[');
+
+        this.vw.writePush(symbolKindToSegment(this.st.kindOf(identifier)), this.st.indexOf(identifier));
         this.logWrapper(this.compileExpression, 'expression');
+        this.vw.writeArithmetic(Commands.ADD);
+        this.vw.writePop(Segments.POINTER, 1);
+        this.vw.writePush(Segments.THAT, 0);
+
         this.eat(']');
       } else {
         this.log({type: 'identifierToken', data: {...logData, category: 'varName'}});
@@ -591,6 +610,14 @@ export default class CompilationEngine {
 
       if (tokenType === INT_CONST) {
         this.vw.writePush(Segments.CONST, token);
+      } else if (tokenType === STRING_CONST) {
+        this.vw.writePush(Segments.CONST, token.length);
+        this.vw.writeCall('String.new', 1);
+
+        [...token].forEach((char, i) => {
+          this.vw.writePush(Segments.CONST, char.charCodeAt());
+          this.vw.writeCall('String.appendChar', 2)
+        });
       } else if (token === NULL || token === FALSE) {
         this.vw.writePush(Segments.CONST, 0);
       } else if (token === TRUE) {
