@@ -41,13 +41,14 @@ Writes the VM commands to file
 |writeReturn||Write a function return command|
 
 ### CompilationEngine
-Compiles VM code. API is identical to the [CompilationEngine module](https://github.com/timiscoding/JackAnalyzer) found in JackAnalyzer. Logging the parse tree XML can be turned off/on with the last arg `constructor(input, output, true)`.
+Compiles VM code. API is identical to the [CompilationEngine module](https://github.com/timiscoding/JackAnalyzer) found in JackAnalyzer.
 
 ## Install & Usage
 ```
 npm install
-node --experimental-modules JackCompiler.mjs <file/dir>
+node --experimental-modules JackCompiler.mjs <src file/dir> [args]
 ```
+Use `--help` flag for more options.
 
 ## Testing
 Each of the folders contains Jack programs used to test the compiler. All except `ExpressionTest` were provided by the nand2tetris course creators.

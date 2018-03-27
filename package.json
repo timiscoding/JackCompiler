@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "n-readlines": "^0.2.8"
+    "n-readlines": "^0.2.8",
+    "yargs": "^11.0.0"
   }
 }

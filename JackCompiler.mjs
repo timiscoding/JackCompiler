@@ -1,14 +1,36 @@
 import fs from 'fs';
 import path from 'path';
+import yargs from 'yargs';
 import CompilationEngine from './CompilationEngine';
 
-const inputArg = process.argv[2];
-const outputFilenamePostfix = process.argv[3] || '';
+const argv = yargs
+  .usage('Usage: $0 <src file|src dir> [args]')
+  .demandCommand(1, 'Source file/dir not found')
+  .check((argv, opt) => {
+    return fs.existsSync(argv._[0]);
+  })
+  .boolean('enable-parse-tree')
+  .options({
+    'suffix': {
+      alias: 's',
+      describe: 'Appends text to the output filename',
+      default: '',
+    },
+    'enable-parse-tree': {
+      alias: 'p',
+      describe: 'Writes the source parse tree to XML',
+    },
+  })
+  .fail((msg, err, yargs) => {
+    if (err) throw err;
+    console.error("Source file/dir not found");
+    console.error(yargs.help());
+    process.exit(1);
+  })
+  .version(false)
+  .argv;
 
-if (!fs.existsSync(inputArg)) {
-  throw Error('No such file/dir', inputArg);
-}
-
+const inputArg = argv._[0];
 const stats = fs.statSync(inputArg);
 let files = [];
 if (stats.isDirectory()) {
@@ -26,9 +48,9 @@ files.forEach(f => {
   });
   const output = path.format({
     dir,
-    name: inputParsed.name + outputFilenamePostfix,
+    name: inputParsed.name + argv["suffix"],
   });
   console.log(`Compiling ${path.relative(process.cwd(), f)} -> ${path.relative(process.cwd(), output)}.vm`);
-  const ce = new CompilationEngine(input, output);
+  const ce = new CompilationEngine(input, output, argv['enable-parse-tree']);
   ce.dispose();
 })
