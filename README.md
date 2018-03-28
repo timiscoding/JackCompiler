@@ -46,7 +46,7 @@ Compiles VM code. API is identical to the [CompilationEngine module](https://git
 ## Install & Usage
 ```
 npm install
-node JackCompiler.mjs <src file/dir> [args]
+node JackCompiler.js <src file/dir> [options]
 ```
 Use `--help` flag for more options.
 
