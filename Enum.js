@@ -4,7 +4,7 @@
  * https://gist.github.com/xmlking/e86e4f15ec32b12c4689#file-enum-es6-js-L37
  * */
 
-export class EnumSymbol {
+class EnumSymbol {
   constructor(name, { value, description }) {
     if (!Object.is(value, undefined)) this.value = value;
     if (description) this.description = description;
@@ -25,7 +25,7 @@ export class EnumSymbol {
   }
 }
 
-export default class Enum {
+class Enum {
   constructor(enumLiterals) {
     for (let key in enumLiterals) {
       if (!enumLiterals[key]) throw new TypeError('each enum should have been initialized with atleast empty {} value');
@@ -50,3 +50,8 @@ export default class Enum {
     return this[Symbol.keyFor(sym.sym)] === sym;
   }
 }
+
+module.exports = {
+  Enum,
+  EnumSymbol,
+};

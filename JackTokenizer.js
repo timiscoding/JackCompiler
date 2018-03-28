@@ -1,7 +1,7 @@
-import readlines from 'n-readlines';
-import Enum from './Enum';
+const readlines = require('n-readlines');
+const {Enum} = require('./Enum');
 
-export const TokenTypes = new Enum({
+const TokenTypes = new Enum({
   KEYWORD: { value: 0, description: "keyword" },
   SYMBOL: { value: 1, description: "symbol" },
   IDENTIFIER: { value: 2, description: "identifier" },
@@ -9,7 +9,7 @@ export const TokenTypes = new Enum({
   STRING_CONST: { value: 4, description: "stringConstant" },
 });
 
-export const TokenKeywords = new Enum({
+const TokenKeywords = new Enum({
   CLASS: { value: 0, description: 'class' },
   METHOD: { value: 1, description: 'method' },
   FUNCTION: { value: 2, description: 'function' },
@@ -33,7 +33,7 @@ export const TokenKeywords = new Enum({
   THIS: { value: 20, description: 'this' },
 });
 
-export default class JackTokenizer {
+class JackTokenizer {
   constructor(filename) {
     this.readLine = new readlines(filename);
     this.prevLine = '';
@@ -130,3 +130,9 @@ export default class JackTokenizer {
     return this.nextToken.value;
   }
 }
+
+module.exports = {
+  TokenTypes,
+  TokenKeywords,
+  JackTokenizer,
+};

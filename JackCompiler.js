@@ -1,7 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import yargs from 'yargs';
-import CompilationEngine from './CompilationEngine';
+const fs = require('fs');
+const path = require('path');
+const yargs = require('yargs');
+const {CompilationEngine} = require('./CompilationEngine');
 
 const argv = yargs
   .usage('Usage: $0 <src file|src dir> [args]')

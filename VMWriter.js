@@ -1,8 +1,8 @@
-import fs from 'fs';
-import assert from 'assert';
-import Enum from './Enum';
+const fs = require('fs');
+const assert = require('assert');
+const {Enum} = require('./Enum');
 
-export const Segments = new Enum({
+const Segments = new Enum({
   CONST: {value: 0, description: 'constant'},
   ARG: {value: 1, description: 'argument'},
   LOCAL: {value: 2, description: 'local'},
@@ -13,7 +13,7 @@ export const Segments = new Enum({
   TEMP: {value: 7, description: 'temp'},
 });
 
-export const Commands = new Enum({
+const Commands = new Enum({
   ADD: {value:0, description: 'add'},
   SUB: {value:1, description: 'sub'},
   NEG: {value:2, description: 'neg'},
@@ -25,7 +25,7 @@ export const Commands = new Enum({
   NOT: {value:8, description: 'not'},
 });
 
-export default class VMWriter {
+class VMWriter {
   constructor(outputFilename) {
     this.outputFile = fs.openSync(outputFilename + '.vm', 'w+');
   }
@@ -88,3 +88,9 @@ export default class VMWriter {
     this.outputFile = null;
   }
 }
+
+module.exports = {
+  Segments,
+  Commands,
+  VMWriter,
+};

@@ -1,7 +1,7 @@
-import fs from 'fs';
-import {default as JackTokenizer, TokenTypes, TokenKeywords} from './JackTokenizer';
-import {default as SymbolTable, SymbolTableKinds} from './SymbolTable';
-import {default as VMWriter, Segments, Commands} from './VMWriter';
+const fs = require('fs');
+const {JackTokenizer, TokenTypes, TokenKeywords} = require('./JackTokenizer');
+const {SymbolTable, SymbolTableKinds} = require('./SymbolTable');
+const {VMWriter, Segments, Commands} = require('./VMWriter');
 
 const { KEYWORD, SYMBOL, IDENTIFIER, INT_CONST, STRING_CONST } = TokenTypes;
 const {
@@ -24,7 +24,7 @@ const segment = kind => {
   else if (kind === SymbolTableKinds.ARG) { return Segments.ARG; }
 }
 
-export default class CompilationEngine {
+class CompilationEngine {
   constructor(inputFile, outputFile, enableLog=false) {
     this.inputFile = inputFile;
     this.tk = new JackTokenizer(inputFile);
@@ -626,3 +626,5 @@ export default class CompilationEngine {
     this.outputFile = null;
   }
 }
+
+exports.CompilationEngine = CompilationEngine;

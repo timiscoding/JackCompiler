@@ -1,6 +1,6 @@
-import Enum from './Enum';
+const {Enum} = require('./Enum');
 
-export const SymbolTableKinds = new Enum({
+const SymbolTableKinds = new Enum({
   NONE: {value: 0, description: 'none'},
   STATIC: {value: 1, description: 'static'},
   FIELD: {value: 2, description: 'field'},
@@ -10,7 +10,7 @@ export const SymbolTableKinds = new Enum({
 
 const {NONE, STATIC, FIELD, ARG, VAR} = SymbolTableKinds;
 
-export default class SymbolTable {
+class SymbolTable {
   constructor() {
     this.classTable = {};
     this.subroutineTable = {};
@@ -71,3 +71,8 @@ export default class SymbolTable {
     return name in this.subroutineTable || name in this.classTable;
   }
 }
+
+module.exports = {
+  SymbolTableKinds,
+  SymbolTable,
+};
